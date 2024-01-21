@@ -74,23 +74,36 @@ def get_dish_by_id(menu_id, submenu_id, dish_id, db: Session = Depends(get_db)):
     else:
         return dish
 
-#
-# @app.post("/api/v1/menus/", response_model=List[schemas.Menu])
-# def get_menus(db: Session = Depends(get_db)):
-#     crud.add_menu(db)
-#     # menus = crud.get_menu(db)
-#     # return [{'id': row[0], 'count': row[1]} for row in menus] #[{'id':0, 'count':1}]
-#
-#
-# @app.post("/api/v1/menus/{menu_id}/submenus/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.post("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
-#
+
+@app.post("/api/v1/menus/", response_model=schemas.Menu)
+def create_menu(menu: schemas.MenuCreate, db: Session = Depends(get_db)):
+    db_menu = crud.get_menu_by_title(db=db, title=menu.title)
+    if db_menu:
+        raise HTTPException(status_code=400, detail="Menu already registered")
+    return crud.create_menu(db=db, menu=menu)
+
+
+@app.post("/api/v1/menus/{menu_id}/submenus/", response_model=schemas.SubMenu)
+def create_submenu(menu_id: int, submenu: schemas.SubMenuCreate, db: Session = Depends(get_db)):
+    db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
+    if not db_menu:
+        raise HTTPException(status_code=400, detail="Menu ID not registered")
+    db_submenu = crud.get_submenu_by_title(db=db, title=submenu.title)
+    if db_submenu:
+        raise HTTPException(status_code=400, detail="Submenu already registered")
+    return crud.create_submenu(db=db, menu_id=menu_id, submenu=submenu)
+
+
+@app.post("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/", response_model=schemas.Dish)
+def create_dish(menu_id: int, submenu_id:int, dish: schemas.DishCreate, db: Session = Depends(get_db)):
+    db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
+    if not db_menu:
+        raise HTTPException(status_code=400, detail="Menu ID not registered")
+    db_submenu = crud.check_submenu_by_id(db=db, submenu_id=submenu_id)
+    if not db_submenu:
+        raise HTTPException(status_code=400, detail="Submenu ID not registered")
+    return crud.create_dish(db=db, menu_id=menu_id, submenu_id=submenu_id, dish=dish)
+
 #
 # @app.patch("/api/v1/menus/{menu_id}/", response_model=List[schemas.Menu])
 # def get_menus_by_id(db: Session = Depends(get_db)):

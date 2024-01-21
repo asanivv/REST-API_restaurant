@@ -1,14 +1,15 @@
-from decimal import Decimal
-from typing import Optional
-from uuid import UUID
+import decimal
 
 from pydantic import BaseModel, condecimal
-from sqlalchemy import Numeric
 
 
 class MenuBase(BaseModel):
     title: str
     description: str | None = None
+
+
+class MenuCreate(MenuBase):
+    pass
 
 
 class Menu(MenuBase):
@@ -28,6 +29,11 @@ class SubMenu(MenuBase):
         from_attributes = True
 
 
+class SubMenuCreate(MenuBase):
+    pass
+    # menu_id: int
+
+
 class Dish(MenuBase):
     id: int
     price: condecimal(decimal_places=2)
@@ -35,3 +41,6 @@ class Dish(MenuBase):
     class Config:
         from_attributes = True
 
+
+class DishCreate(MenuBase):
+    price: decimal.Decimal
