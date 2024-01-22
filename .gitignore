@@ -1,7 +1,8 @@
 venv
 .env
 *.db
+README.txt
 .idea
 __pycache__/
 restaurant/__pycache__/
-README.txt
+

@@ -5,6 +5,16 @@ from sqlalchemy import URL
 
 from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_BASE
 
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 url_object = URL.create(
     "postgresql",
     username=DB_USER,
