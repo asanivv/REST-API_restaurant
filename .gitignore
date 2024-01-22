@@ -4,3 +4,4 @@ venv
 .idea
 __pycache__/
 restaurant/__pycache__/
+README.txt
