@@ -1,4 +1,6 @@
 from restaurant.menu.database import SQLALCHEMY_DATABASE_URL
+from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_BASE
+
 
 from logging.config import fileConfig
 
@@ -10,6 +12,7 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
 config.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URL)
 
 # Interpret the config file for Python logging.

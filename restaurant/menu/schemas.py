@@ -1,4 +1,5 @@
 import decimal
+from uuid import UUID
 
 from pydantic import BaseModel, condecimal
 
@@ -9,11 +10,12 @@ class MenuBase(BaseModel):
 
 
 class MenuCreate(MenuBase):
-    pass
+    submenus_count: int = 0
+    dishes_count: int = 0
 
 
 class Menu(MenuBase):
-    id: int
+    id:  UUID
     submenus_count: int
     dishes_count: int
 
@@ -22,7 +24,7 @@ class Menu(MenuBase):
 
 
 class SubMenu(MenuBase):
-    id: int
+    id: UUID
     dishes_count: int
 
     class Config:
@@ -34,8 +36,12 @@ class SubMenuCreate(MenuBase):
     # menu_id: int
 
 
+class SubMenuUpdate(MenuBase):
+    menu_id: UUID
+
+
 class Dish(MenuBase):
-    id: int
+    id: UUID
     price: condecimal(decimal_places=2)
 
     class Config:
@@ -43,4 +49,8 @@ class Dish(MenuBase):
 
 
 class DishCreate(MenuBase):
+    price: decimal.Decimal
+
+
+class DishUpdate(MenuBase):
     price: decimal.Decimal

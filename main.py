@@ -19,13 +19,6 @@ def get_db():
         db.close()
 
 
-# @app.post("/menus/", response_model=schemas.Menu)
-# def create_user(menu: schemas.MenuCreate, db: Session = Depends(get_db)):
-#     db_menu = crud.get_menu_by_name(db, name=menu.name)
-#     if db_menu:
-#         raise HTTPException(status_code=400, detail="Email already registered")
-#     return crud.create_menu(db=db, name=menu)
-
 
 @app.get("/api/v1/menus/", response_model=list[schemas.Menu])
 def get_menus(db: Session = Depends(get_db)):
@@ -61,7 +54,7 @@ def get_submenu_by_id(menu_id, submenu_id, db: Session = Depends(get_db)):
 
 
 @app.get("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/", response_model=list[schemas.Dish])
-def get_dishes(menu_id: int, submenu_id: int, db: Session = Depends(get_db)):
+def get_dishes(menu_id, submenu_id, db: Session = Depends(get_db)):
     dishes = crud.get_dishes(db=db, menu_id=menu_id, submenu_id=submenu_id)
     return dishes
 
@@ -75,7 +68,7 @@ def get_dish_by_id(menu_id, submenu_id, dish_id, db: Session = Depends(get_db)):
         return dish
 
 
-@app.post("/api/v1/menus/", response_model=schemas.Menu)
+@app.post("/api/v1/menus/", response_model=schemas.Menu, status_code=201)
 def create_menu(menu: schemas.MenuCreate, db: Session = Depends(get_db)):
     db_menu = crud.get_menu_by_title(db=db, title=menu.title)
     if db_menu:
@@ -83,8 +76,8 @@ def create_menu(menu: schemas.MenuCreate, db: Session = Depends(get_db)):
     return crud.create_menu(db=db, menu=menu)
 
 
-@app.post("/api/v1/menus/{menu_id}/submenus/", response_model=schemas.SubMenu)
-def create_submenu(menu_id: int, submenu: schemas.SubMenuCreate, db: Session = Depends(get_db)):
+@app.post("/api/v1/menus/{menu_id}/submenus/", response_model=schemas.SubMenu, status_code=201)
+def create_submenu(menu_id, submenu: schemas.SubMenuCreate, db: Session = Depends(get_db)):
     db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
     if not db_menu:
         raise HTTPException(status_code=400, detail="Menu ID not registered")
@@ -94,8 +87,8 @@ def create_submenu(menu_id: int, submenu: schemas.SubMenuCreate, db: Session = D
     return crud.create_submenu(db=db, menu_id=menu_id, submenu=submenu)
 
 
-@app.post("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/", response_model=schemas.Dish)
-def create_dish(menu_id: int, submenu_id:int, dish: schemas.DishCreate, db: Session = Depends(get_db)):
+@app.post("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/", response_model=schemas.Dish, status_code=201)
+def create_dish(menu_id, submenu_id, dish: schemas.DishCreate, db: Session = Depends(get_db)):
     db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
     if not db_menu:
         raise HTTPException(status_code=400, detail="Menu ID not registered")
@@ -104,32 +97,32 @@ def create_dish(menu_id: int, submenu_id:int, dish: schemas.DishCreate, db: Sess
         raise HTTPException(status_code=400, detail="Submenu ID not registered")
     return crud.create_dish(db=db, menu_id=menu_id, submenu_id=submenu_id, dish=dish)
 
-#
-# @app.patch("/api/v1/menus/{menu_id}/", response_model=List[schemas.Menu])
-# def get_menus_by_id(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.patch("/api/v1/menus/{menu_id}/submenus/{submenu_id}/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.patch("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.delete("/api/v1/menus/{menu_id}/", response_model=List[schemas.Menu])
-# def get_menus_by_id(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.delete("/api/v1/menus/{menu_id}/submenus/{submenu_id}/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
-#
-#
-# @app.delete("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/", response_model=List[schemas.Menu])
-# def get_submenus(db: Session = Depends(get_db)):
-#     pass
+
+@app.patch("/api/v1/menus/{menu_id}/", response_model=schemas.Menu)
+def update_menu(menu_id, menu: schemas.MenuBase, db: Session = Depends(get_db)):
+    return crud.update_menu(db=db, menu_id=menu_id, menu=menu)
+
+
+@app.patch("/api/v1/menus/{menu_id}/submenus/{submenu_id}/", response_model=schemas.SubMenu)
+def update_submenu(menu_id, submenu_id, submenu: schemas.MenuBase, db: Session = Depends(get_db)):
+    return crud.update_submenu(db=db, menu_id=menu_id, submenu=submenu, submenu_id=submenu_id)
+
+
+@app.patch("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/", response_model=schemas.Dish)
+def get_submenus(menu_id, submenu_id, dish_id, dish: schemas.DishUpdate, db: Session = Depends(get_db)):
+    return crud.update_dish(db=db, menu_id=menu_id, submenu_id=submenu_id, dish_id=dish_id, dish=dish)
+
+
+@app.delete("/api/v1/menus/{menu_id}/")
+def delete_menu_by_id(menu_id, db: Session = Depends(get_db)):
+    return crud.delete_menu_by_id(db=db, menu_id=menu_id)
+
+
+@app.delete("/api/v1/menus/{menu_id}/submenus/{submenu_id}/")
+def delete_submenu_by_id(menu_id, submenu_id, db: Session = Depends(get_db)):
+    return crud.delete_submenu_by_id(db=db, menu_id=menu_id, submenu_id=submenu_id)
+
+
+@app.delete("/api/v1/menus/{menu_id}/submenus/{submenu_id}/dishes/{dish_id}/")
+def get_submenus(menu_id, submenu_id, dish_id, db: Session = Depends(get_db)):
+    return crud.delete_dish_by_id(db=db, menu_id=menu_id, submenu_id=submenu_id, dish_id=dish_id)
