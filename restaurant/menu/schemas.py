@@ -6,7 +6,7 @@ from pydantic import BaseModel, condecimal
 
 class MenuBase(BaseModel):
     title: str
-    description: str | None = None
+    description: str
 
 
 class MenuCreate(MenuBase):
@@ -33,7 +33,6 @@ class SubMenu(MenuBase):
 
 class SubMenuCreate(MenuBase):
     pass
-    # menu_id: int
 
 
 class SubMenuUpdate(MenuBase):
