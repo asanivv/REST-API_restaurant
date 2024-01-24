@@ -9,17 +9,17 @@ PostgreSQL: https://www.postgresql.org/download/
 После установки СУБД PostgreSQL необходимо создать пустую базу данных на сервере.
 
 Для загрузки проекта можно воспользоваться приложением Git: https://git-scm.com/downloads
-(либо можно скачать архивом по ссылке https://github.com/asanivv/ylab-REST-API_restaurant/tree/master и распаковать)
+(либо можно скачать архивом по ссылке https://github.com/asanivv/REST-API_restaurant.git и распаковать)
 
 Создаем пустой каталог на ПК и в терминале переходим в созданную папку.
 (можно открыть терминал сразу в папке или перейти в нужный каталог используя команды терминала)
 Далее выполняем команду:
 
- git clone -b master https://github.com/asanivv/ylab-REST-API_restaurant.git
+ git clone https://github.com/asanivv/REST-API_restaurant.git
 
-Эта команда загрузит проект в Ваш каталог и в ней появится новый каталог с названием: ylab-REST-API_restaurant.
+Эта команда загрузит проект в Ваш каталог и в ней появится новый каталог с названием:REST-API_restaurant.
 
-Необходимо перейти в каталог ylab-REST-API_restaurant и в нем создать файл .env со следующим содержимым:
+Необходимо перейти в каталог REST-API_restaurant и в нем создать файл .env со следующим содержимым:
 
 HOST=
 DB_PORT=
@@ -46,7 +46,7 @@ DATABASE=restaurant
 Далее нам нужно установить необходимые библиотеки для проекта.
 Для этого сначала создаем виртуальное откружение следующей командой:
     python -m venv venv
-(Перед выполнением команды убедитесь, что Вы находитесь в директории ylab-REST-API_restaurant)
+(Перед выполнением команды убедитесь, что Вы находитесь в директории REST-API_restaurant)
 
 После успешного выполнения команды должен создаться новый каталог с именем: venv
 
@@ -61,9 +61,9 @@ DATABASE=restaurant
 
     pip install -r requirements.txt
 
-Перед запуском приложения убедитесь, что каталог ylab-REST-API_restaurant имеет следующую структуру:
+Перед запуском приложения убедитесь, что каталог REST-API_restaurant имеет следующую структуру:
 
-    ylab-REST-API_restaurant:
+    REST-API_restaurant:
             \alembic
             \restaurant
             \venv
