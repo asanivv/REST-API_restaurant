@@ -2,14 +2,15 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
+from typing import List
 
 from .database import get_db
-from restaurant.menu import schemas, crud
+from . import schemas, crud
 
 menu_router = APIRouter()
 
 
-@menu_router.get("/", response_model=list[schemas.Menu])
+@menu_router.get("/", response_model=List[schemas.Menu])
 def get_menus(db: Session = Depends(get_db)):
     menus = crud.get_menus(db=db)
     if menus is None:
@@ -27,7 +28,7 @@ def get_menu_by_id(menu_id, db: Session = Depends(get_db)):
         return menu
 
 
-@menu_router.get("/{menu_id}/submenus/", response_model=list[schemas.SubMenu])
+@menu_router.get("/{menu_id}/submenus/", response_model=List[schemas.SubMenu])
 def get_submenus(menu_id, db: Session = Depends(get_db)):
     submenus = crud.get_submenus(db=db, menu_id=menu_id)
     return submenus
@@ -42,7 +43,7 @@ def get_submenu_by_id(menu_id, submenu_id, db: Session = Depends(get_db)):
         return submenus
 
 
-@menu_router.get("/{menu_id}/submenus/{submenu_id}/dishes/", response_model=list[schemas.Dish])
+@menu_router.get("/{menu_id}/submenus/{submenu_id}/dishes/", response_model=List[schemas.Dish])
 def get_dishes(menu_id, submenu_id, db: Session = Depends(get_db)):
     dishes = crud.get_dishes(db=db, menu_id=menu_id, submenu_id=submenu_id)
     return dishes

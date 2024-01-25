@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy import select, func, and_
 from sqlalchemy.orm import Session
 
-from restaurant.menu import models, schemas
+from . import models, schemas
 
 
 def raise_if_not_exist(item: object, message: str):

@@ -1,6 +1,4 @@
 from restaurant.menu.database import SQLALCHEMY_DATABASE_URL
-from config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_BASE
-
 
 from logging.config import fileConfig
 
