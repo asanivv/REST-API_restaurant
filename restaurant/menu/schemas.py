@@ -1,34 +1,35 @@
 import decimal
+import uuid
 from uuid import UUID
 
-from pydantic import BaseModel, condecimal
+from pydantic import BaseModel, condecimal, ConfigDict, Field
 
 
 class MenuBase(BaseModel):
+    id: UUID = Field(default=uuid.uuid4)
     title: str
     description: str
 
 
 class MenuCreate(MenuBase):
-    submenus_count: int = 0
-    dishes_count: int = 0
+    model_config = ConfigDict(from_attributes=True)
 
-
-class Menu(MenuBase):
-    id:  UUID
     submenus_count: int
     dishes_count: int
 
-    class Config:
-        from_attributes = True
+
+class Menu(MenuBase):
+    model_config = ConfigDict(from_attributes=True)
+
+    submenus_count: int
+    dishes_count: int
 
 
 class SubMenu(MenuBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     dishes_count: int
-
-    class Config:
-        from_attributes = True
 
 
 class SubMenuCreate(MenuBase):
@@ -40,11 +41,10 @@ class SubMenuUpdate(MenuBase):
 
 
 class Dish(MenuBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     price: condecimal(decimal_places=2)
-
-    class Config:
-        from_attributes = True
 
 
 class DishCreate(MenuBase):

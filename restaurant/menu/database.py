@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import URL
 
@@ -15,7 +15,10 @@ def get_db():
         db.close()
 
 
-DB = DB_URL.split('@')[1].split(':')[0]
+if DB_URL:
+    DB = DB_URL.split('@')[1].split(':')[0]
+else:
+    DB = DB_HOST
 
 url_object = URL.create(
     "postgresql",

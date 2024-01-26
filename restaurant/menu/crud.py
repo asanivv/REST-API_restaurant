@@ -7,9 +7,17 @@ from sqlalchemy.orm import Session
 from . import models, schemas
 
 
-def raise_if_not_exist(item: object, message: str):
+def raise_if_not_exist(item: object, message: str, status_code=404):
     if not item:
-        raise HTTPException(status_code=404, detail=message)
+        raise HTTPException(status_code=status_code, detail=message)
+
+
+def is_valid_uuid(uuid_to_test, version=4):
+    try:
+        uuid_obj = UUID(uuid_to_test, version=version)
+    except ValueError:
+        return False
+    return str(uuid_obj) == uuid_to_test
 
 
 def get_submenus(db: Session, menu_id: UUID):
@@ -98,14 +106,15 @@ def check_submenu_by_id(db: Session, submenu_id: UUID):
     return db.query(models.SubMenu).filter(models.SubMenu.id == submenu_id).first()
 
 
-def create_menu(db: Session, menu: schemas.MenuCreate):
-    db_menu = models.Menu(title=menu.title, description=menu.description)
+def create_menu(db: Session, menu: schemas.MenuBase):
+    db_menu = models.Menu()
+    menu_data = menu.model_dump(exclude_unset=True)
+    for key, value in menu_data.items():
+        setattr(db_menu, key, value)
     db.add(db_menu)
     db.commit()
     db.refresh(db_menu)
-    db_menu.submenus_count = 0
-    db_menu.dishes_count = 0
-    return db_menu
+    return get_menu_by_id(db, menu_id=db_menu.id)
 
 
 def get_dishes(db: Session, submenu_id: UUID, menu_id: UUID):
@@ -132,10 +141,13 @@ def create_dish(db: Session, menu_id: UUID, submenu_id: UUID, dish: schemas.Dish
 
 
 def delete_menu_by_id(db: Session, menu_id: UUID):
-    menu = db.get(models.Menu, menu_id)
-    raise_if_not_exist(menu, "Menu not found")
-    db.delete(menu)
-    db.commit()
+    if is_valid_uuid(menu_id):
+        menu = db.get(models.Menu, menu_id)
+        raise_if_not_exist(menu, "Menu not found")
+        db.delete(menu)
+        db.commit()
+    else:
+        raise HTTPException(status_code=422, detail="Wrong id type")
     return {"status": True, "message": "The menu has been deleted"}
 
 

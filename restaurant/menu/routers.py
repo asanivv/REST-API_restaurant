@@ -12,11 +12,7 @@ menu_router = APIRouter()
 
 @menu_router.get("/", response_model=List[schemas.Menu])
 def get_menus(db: Session = Depends(get_db)):
-    menus = crud.get_menus(db=db)
-    if menus is None:
-        raise HTTPException(status_code=404, detail="menus not found")
-    else:
-        return menus
+    return crud.get_menus(db=db)
 
 
 @menu_router.get("/{menu_id}/", response_model=schemas.Menu)
@@ -58,8 +54,8 @@ def get_dish_by_id(menu_id, submenu_id, dish_id, db: Session = Depends(get_db)):
         return dish
 
 
-@menu_router.post("/", response_model=schemas.Menu, status_code=201)
-def create_menu(menu: schemas.MenuCreate, db: Session = Depends(get_db)):
+@menu_router.post("/", response_model=schemas.MenuCreate, status_code=201)
+def create_menu(menu: schemas.MenuBase, db: Session = Depends(get_db)):
     db_menu = crud.get_menu_by_title(db=db, title=menu.title)
     if db_menu:
         raise HTTPException(status_code=400, detail="Menu already registered")
