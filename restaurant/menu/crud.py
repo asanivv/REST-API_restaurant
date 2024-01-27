@@ -1,7 +1,9 @@
 from uuid import UUID
 
 from fastapi import HTTPException
+from psycopg2 import errors
 from sqlalchemy import select, func, and_
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from . import models, schemas
@@ -112,7 +114,10 @@ def check_menu_by_id(db: Session, menu_id: UUID):
 
 
 def check_submenu_by_id(db: Session, submenu_id: UUID):
-    return db.query(models.SubMenu).filter(models.SubMenu.id == submenu_id).first()
+    if is_valid_uuid(submenu_id):
+        return db.query(models.SubMenu).filter(models.SubMenu.id == submenu_id).first()
+    else:
+        raise HTTPException(status_code=422, detail="Wrong id type")
 
 
 def create_menu(db: Session, menu: schemas.MenuBase):
@@ -142,11 +147,24 @@ def get_dish_by_id(db: Session, submenu_id: UUID, menu_id: UUID, dish_id: UUID):
 
 
 def create_dish(db: Session, menu_id: UUID, submenu_id: UUID, dish: schemas.DishCreate):
-    db_dish = models.Dish(submenu_id=submenu_id, title=dish.title, description=dish.description, price=dish.price)
-    db.add(db_dish)
-    db.commit()
-    db.refresh(db_dish)
-    return get_dish_by_id(db=db, menu_id=menu_id, submenu_id=submenu_id, dish_id=db_dish.id)
+    if is_valid_uuid(menu_id) and is_valid_uuid(submenu_id):
+        db_dish = models.Dish()
+        dish_data = dish.model_dump(exclude_unset=True)
+        for key, value in dish_data.items():
+            setattr(db_dish, key, value)
+        db_dish.submenu_id = submenu_id
+        try:
+            db.add(db_dish)
+            db.commit()
+            db.refresh(db_dish)
+        except errors.lookup("23505"):
+            raise HTTPException(status_code=500, detail='A duplicate record already exists')
+        except IntegrityError:
+            raise HTTPException(status_code=500, detail='A duplicate record already exists')
+
+        return get_dish_by_id(db=db, menu_id=menu_id, submenu_id=submenu_id, dish_id=db_dish.id)
+    else:
+        raise HTTPException(status_code=422, detail="Wrong id type")
 
 
 def delete_menu_by_id(db: Session, menu_id: UUID):

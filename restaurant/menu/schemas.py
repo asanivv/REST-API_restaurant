@@ -44,7 +44,6 @@ class SubMenuUpdate(MenuBase):
 class Dish(MenuBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id: UUID
     price: condecimal(decimal_places=2)
 
 
