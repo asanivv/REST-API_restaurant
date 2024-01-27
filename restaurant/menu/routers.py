@@ -58,18 +58,18 @@ def get_dish_by_id(menu_id, submenu_id, dish_id, db: Session = Depends(get_db)):
 def create_menu(menu: schemas.MenuBase, db: Session = Depends(get_db)):
     db_menu = crud.get_menu_by_title(db=db, title=menu.title)
     if db_menu:
-        raise HTTPException(status_code=400, detail="Menu already registered")
+        raise HTTPException(status_code=400, detail="Title of Menu already registered")
     return crud.create_menu(db=db, menu=menu)
 
 
-@menu_router.post("/{menu_id}/submenus/", response_model=schemas.SubMenu, status_code=201)
-def create_submenu(menu_id, submenu: schemas.SubMenuCreate, db: Session = Depends(get_db)):
+@menu_router.post("/{menu_id}/submenus/", response_model=schemas.SubMenuCreate, status_code=201)
+def create_submenu(menu_id, submenu: schemas.MenuBase, db: Session = Depends(get_db)):
     db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
     if not db_menu:
-        raise HTTPException(status_code=400, detail="Menu ID not registered")
+        raise HTTPException(status_code=400, detail="ID of Menu not registered")
     db_submenu = crud.get_submenu_by_title(db=db, title=submenu.title)
     if db_submenu:
-        raise HTTPException(status_code=400, detail="Submenu already registered")
+        raise HTTPException(status_code=400, detail="Title of Submenu already registered")
     return crud.create_submenu(db=db, menu_id=menu_id, submenu=submenu)
 
 
@@ -77,10 +77,10 @@ def create_submenu(menu_id, submenu: schemas.SubMenuCreate, db: Session = Depend
 def create_dish(menu_id, submenu_id, dish: schemas.DishCreate, db: Session = Depends(get_db)):
     db_menu = crud.check_menu_by_id(db=db, menu_id=menu_id)
     if not db_menu:
-        raise HTTPException(status_code=400, detail="Menu ID not registered")
+        raise HTTPException(status_code=400, detail="ID of Menu not registered")
     db_submenu = crud.check_submenu_by_id(db=db, submenu_id=submenu_id)
     if not db_submenu:
-        raise HTTPException(status_code=400, detail="Submenu ID not registered")
+        raise HTTPException(status_code=400, detail="ID of Submenu not registered")
     return crud.create_dish(db=db, menu_id=menu_id, submenu_id=submenu_id, dish=dish)
 
 

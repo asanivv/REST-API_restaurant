@@ -28,12 +28,13 @@ class Menu(MenuBase):
 class SubMenu(MenuBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id: UUID
     dishes_count: int
 
 
 class SubMenuCreate(MenuBase):
-    pass
+    model_config = ConfigDict(from_attributes=True)
+
+    dishes_count: int
 
 
 class SubMenuUpdate(MenuBase):

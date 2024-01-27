@@ -50,13 +50,19 @@ def get_submenu_by_title(db: Session, title: str):
     return db.query(models.SubMenu).filter(models.SubMenu.title == title).first()
 
 
-def create_submenu(db: Session, menu_id: UUID, submenu: schemas.SubMenuCreate):
-    db_submenu = models.SubMenu(menu_id=menu_id, title=submenu.title, description=submenu.description)
-    db.add(db_submenu)
-    db.commit()
-    db.refresh(db_submenu)
-    db_submenu.dishes_count = 0
-    return db_submenu
+def create_submenu(db: Session, menu_id: UUID, submenu: schemas.MenuBase):
+    if is_valid_uuid(menu_id):
+        db_submenu = models.SubMenu()
+        submenu_data = submenu.model_dump(exclude_unset=True)
+        for key, value in submenu_data.items():
+            setattr(db_submenu, key, value)
+        db_submenu.menu_id = menu_id
+        db.add(db_submenu)
+        db.commit()
+        db.refresh(db_submenu)
+        return get_submenu_by_id(db=db, menu_id=menu_id, submenu_id=db_submenu.id)
+    else:
+        raise HTTPException(status_code=422, detail="Wrong id type")
 
 
 def get_menus(db: Session):
@@ -99,7 +105,10 @@ def get_menu_by_title(db: Session, title: str):
 
 
 def check_menu_by_id(db: Session, menu_id: UUID):
-    return db.query(models.Menu).filter(models.Menu.id == menu_id).first()
+    if is_valid_uuid(menu_id):
+        return db.query(models.Menu.id).filter(models.Menu.id == menu_id).first()
+    else:
+        raise HTTPException(status_code=422, detail="Wrong id type")
 
 
 def check_submenu_by_id(db: Session, submenu_id: UUID):
@@ -152,23 +161,29 @@ def delete_menu_by_id(db: Session, menu_id: UUID):
 
 
 def delete_submenu_by_id(db: Session, menu_id: UUID, submenu_id: UUID):
-    menu = db.get(models.Menu, menu_id)
-    raise_if_not_exist(menu, "Menu not found")
-    submenu = db.get(models.SubMenu, submenu_id)
-    db.delete(submenu)
-    db.commit()
+    if is_valid_uuid(menu_id) and is_valid_uuid(submenu_id):
+        menu = db.get(models.Menu, menu_id)
+        raise_if_not_exist(menu, "Menu not found")
+        submenu = db.get(models.SubMenu, submenu_id)
+        db.delete(submenu)
+        db.commit()
+    else:
+        raise HTTPException(status_code=422, detail="One or more wrong types id")
     return {"status": True, "message": "The submenu has been deleted"}
 
 
 def delete_dish_by_id(db: Session, menu_id: UUID, submenu_id: UUID, dish_id: UUID):
-    menu = db.get(models.Menu, menu_id)
-    raise_if_not_exist(menu, "Menu not found")
-    submenu = db.get(models.SubMenu, submenu_id)
-    raise_if_not_exist(submenu, "Submenu not found")
-    dish = db.get(models.Dish, dish_id)
-    raise_if_not_exist(dish, "Dish not found")
-    db.delete(dish)
-    db.commit()
+    if is_valid_uuid(menu_id) and is_valid_uuid(submenu_id) and is_valid_uuid(dish_id):
+        menu = db.get(models.Menu, menu_id)
+        raise_if_not_exist(menu, "Menu not found")
+        submenu = db.get(models.SubMenu, submenu_id)
+        raise_if_not_exist(submenu, "Submenu not found")
+        dish = db.get(models.Dish, dish_id)
+        raise_if_not_exist(dish, "Dish not found")
+        db.delete(dish)
+        db.commit()
+    else:
+        raise HTTPException(status_code=422, detail="One or more wrong types id")
     return {"status": True, "message": "The dish has been deleted"}
 
 

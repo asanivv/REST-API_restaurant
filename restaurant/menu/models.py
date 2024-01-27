@@ -10,9 +10,6 @@ from .database import Base
 class Menu(Base):
     __tablename__ = "menus"
     id = Column(UUID, primary_key=True, default=uuid.uuid4)
-    # id = Column(Uuid,
-    #             primary_key=True,
-    #             index=True, default=uuid.uuid4)
     title = Column(String, unique=True, index=True)
     description = Column(String, default='')
     children = relationship(
