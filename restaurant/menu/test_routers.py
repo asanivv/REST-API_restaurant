@@ -47,7 +47,7 @@ def get_submenu_by_id(submenu_id: str):
         return session.get(models.SubMenu, submenu_id)
 
 
-def get_dish_by_id(dish_id):
+def get_dish_by_id(dish_id: str):
     with Session(engine) as session:
         return session.get(models.Dish, dish_id)
 
@@ -434,10 +434,10 @@ def test_update_dish():
     response = client.patch(f"/{menu_test['id']}/submenus/{submenu_test['id']}/dishes/{dish_test['id']}",
                             json={
 
-                                    'id': dish_test['id'],
-                                    "title": dish_test['title'],
-                                    "description": "this field has been changed",
-                                    "price": '7.777',
+                                'id': dish_test['id'],
+                                "title": dish_test['title'],
+                                "description": "this field has been changed",
+                                "price": '7.777',
                             },
                             )
     assert response.status_code == 200
@@ -455,3 +455,96 @@ def test_delete_dish_by_id():
     assert get_dish_by_id(submenu_test['id']) is None
 
 
+def test_count_submenu_and_dish_of_menu():
+    with Session(engine) as session:
+        session.execute(delete(models.Menu))
+        session.commit()
+
+    # create menu
+    menu = {
+        "id": f"{uuid.uuid4()}",
+        "title": "menu1",
+        "description": "about menu1",
+    }
+    response = client.post("/", json=menu)
+    assert response.status_code == 201
+    assert response.json()['id'] == menu['id']
+    assert get_menu_by_id(menu['id']) is not None
+
+    # create submenu
+    submenu = {
+        "id": f"{uuid.uuid4()}",
+        "title": "submenu1",
+        "description": "about submenu1",
+    }
+    response = client.post(f"/{menu['id']}/submenus/", json=submenu)
+    assert response.status_code == 201
+    assert response.json()['id'] == submenu['id']
+    assert get_submenu_by_id(submenu['id']) is not None
+
+    # create dish1
+    dish1 = {
+        "id": f"{uuid.uuid4()}",
+        "title": "dish1",
+        "description": "about dish1",
+        "price": "13.50"
+    }
+    response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish1)
+    assert response.status_code == 201
+    assert response.json()['id'] == dish1['id']
+    assert get_dish_by_id(dish1['id']) is not None
+
+    # create dish2
+    dish2 = {
+        "id": f"{uuid.uuid4()}",
+        "title": "dish2",
+        "description": "about dish2",
+        "price": "12.50"
+    }
+    response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish2)
+    assert response.status_code == 201
+    assert response.json()['id'] == dish2['id']
+    assert get_dish_by_id(dish2['id']) is not None
+
+    # Views a specific menu
+    response = client.get(f"/{menu['id']}/")
+    assert response.status_code == 200
+    assert response.json()['id'] == menu['id']
+    assert response.json()['submenus_count'] == 1
+    assert response.json()['dishes_count'] == 2
+
+    # Views a specific submenu
+    response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/")
+    assert response.status_code == 200
+    assert response.json()['id'] == submenu['id']
+    assert response.json()['dishes_count'] == 2
+
+    # Delete submenu
+    response = client.delete(f"/{menu['id']}/submenus/{submenu['id']}/")
+    assert response.status_code == 200
+
+    # Views a list of submenus
+    response = client.get(f"/{menu['id']}/submenus/")
+    assert response.status_code == 200
+    assert response.json() == []
+
+    # Views a list of dishes
+    response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/")
+    assert response.status_code == 200
+    assert response.json() == []
+
+    # Views a specific menu
+    response = client.get(f"/{menu['id']}/")
+    assert response.status_code == 200
+    assert response.json()['id'] == menu['id']
+    assert response.json()['submenus_count'] == 0
+    assert response.json()['dishes_count'] == 0
+
+    # Delete menu
+    response = client.delete(f"/{menu['id']}")
+    assert response.status_code == 200
+
+    # Views a list of menus
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == []
