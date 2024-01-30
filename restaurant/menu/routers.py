@@ -1,13 +1,23 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
-from typing import List
 
-from .database import get_db
 from . import schemas, crud
+from .database import SessionLocal
 
 menu_router = APIRouter()
+
+
+# Dependency
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 @menu_router.get("/", response_model=List[schemas.Menu])

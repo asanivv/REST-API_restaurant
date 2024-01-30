@@ -1,19 +1,9 @@
+from sqlalchemy import URL
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import URL
 
 from .config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_BASE, DB_URL
-
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 if DB_URL:
     DB = DB_URL.split('@')[1].split(':')[0]

@@ -125,9 +125,12 @@ def create_menu(db: Session, menu: schemas.MenuBase):
     menu_data = menu.model_dump(exclude_unset=True)
     for key, value in menu_data.items():
         setattr(db_menu, key, value)
-    db.add(db_menu)
-    db.commit()
-    db.refresh(db_menu)
+    try:
+        db.add(db_menu)
+        db.commit()
+        db.refresh(db_menu)
+    except IntegrityError:
+        raise HTTPException(status_code=500, detail='A duplicate record already exists')
     return get_menu_by_id(db, menu_id=db_menu.id)
 
 
@@ -157,8 +160,6 @@ def create_dish(db: Session, menu_id: UUID, submenu_id: UUID, dish: schemas.Dish
             db.add(db_dish)
             db.commit()
             db.refresh(db_dish)
-        except errors.lookup("23505"):
-            raise HTTPException(status_code=500, detail='A duplicate record already exists')
         except IntegrityError:
             raise HTTPException(status_code=500, detail='A duplicate record already exists')
 
