@@ -36,22 +36,6 @@ dish_test = {
     "price": "115.455"
 }
 
-
-def get_menu_by_id(menu_id: str):
-    with Session(engine) as session:
-        return session.get(models.Menu, menu_id)
-
-
-def get_submenu_by_id(submenu_id: str):
-    with Session(engine) as session:
-        return session.get(models.SubMenu, submenu_id)
-
-
-def get_dish_by_id(dish_id: str):
-    with Session(engine) as session:
-        return session.get(models.Dish, dish_id)
-
-
 '''
  START MENU TESTS
 '''
@@ -96,7 +80,10 @@ def test_delete_menu_by_id():
     response = client.delete(f"/{menu_test['id']}")
     assert response.status_code == 200
     assert response.json() == {"status": True, "message": "The menu has been deleted"}
-    assert get_menu_by_id(menu_test['id']) is None
+    with pytest.raises(HTTPException) as err:
+        client.get(f"/{menu_test['id']}")
+    assert err.value.status_code == 404
+    assert err.value.detail == "menu not found"
 
 
 def test_menu_id_not_found():
@@ -201,6 +188,12 @@ def test_read_submenu():
     assert submenu_test in data
 
 
+def test_read_submenu_by_id():
+    response = client.get(f"/{menu_test['id']}/submenus/{submenu_test['id']}/")
+    assert response.status_code == 200
+    assert response.json() == submenu_test
+
+
 def test_create_submenu_wrong_menu_id():
     with pytest.raises(HTTPException) as err:
         client.post("/1111/submenus/",
@@ -258,8 +251,12 @@ def test_delete_submenu_by_id():
     response = client.delete(f"/{menu_test['id']}/submenus/{submenu_test['id']}")
     assert response.status_code == 200
     assert response.json() == {"status": True, "message": "The submenu has been deleted"}
-    assert get_menu_by_id(menu_test['id']) is not None
-    assert get_submenu_by_id(submenu_test['id']) is None
+    response = client.get(f"/{menu_test['id']}")
+    assert response.status_code == 200
+    with pytest.raises(HTTPException) as err:
+        client.get(f"/{menu_test['id']}/submenus/{uuid.uuid4()}")
+    assert err.value.status_code == 404
+    assert err.value.detail == "submenu not found"
 
 
 def test_submenu_is_already_registered():
@@ -344,6 +341,17 @@ def test_read_dishes():
                "description": dish_test['description'],
                "price": str(decimal.Decimal(dish_test["price"]).quantize(decimal.Decimal('0.00'))),
            } in data
+
+
+def test_read_dish_by_id():
+    response = client.get(f"/{menu_test['id']}/submenus/{submenu_test['id']}/dishes/{dish_test['id']}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == dish_test['id']
+    assert data["title"] == dish_test['title']
+    assert data["description"] == dish_test['description']
+    assert data["price"] == str(decimal.Decimal(dish_test["price"]).quantize(decimal.Decimal('0.00')))
+
 
 
 def test_create_dish_wrong_menu_id():
@@ -450,9 +458,14 @@ def test_delete_dish_by_id():
     response = client.delete(f"/{menu_test['id']}/submenus/{submenu_test['id']}/dishes/{dish_test['id']}")
     assert response.status_code == 200
     assert response.json() == {"status": True, "message": "The dish has been deleted"}
-    assert get_menu_by_id(menu_test['id']) is not None
-    assert get_submenu_by_id(submenu_test['id']) is not None
-    assert get_dish_by_id(submenu_test['id']) is None
+    response = client.get(f"/{menu_test['id']}")
+    assert response.status_code == 200
+    response = client.get(f"/{menu_test['id']}/submenus/{submenu_test['id']}/")
+    assert response.status_code == 200
+    with pytest.raises(HTTPException) as err:
+        client.get(f"/{menu_test['id']}/submenus/{submenu_test['id']}/dishes/{uuid.uuid4()}")
+    assert err.value.status_code == 404
+    assert err.value.detail == "dish not found"
 
 
 def test_count_submenu_and_dish_of_menu():
@@ -469,7 +482,8 @@ def test_count_submenu_and_dish_of_menu():
     response = client.post("/", json=menu)
     assert response.status_code == 201
     assert response.json()['id'] == menu['id']
-    assert get_menu_by_id(menu['id']) is not None
+    response = client.get(f"/{menu['id']}")
+    assert response.status_code == 200
 
     # create submenu
     submenu = {
@@ -480,7 +494,8 @@ def test_count_submenu_and_dish_of_menu():
     response = client.post(f"/{menu['id']}/submenus/", json=submenu)
     assert response.status_code == 201
     assert response.json()['id'] == submenu['id']
-    assert get_submenu_by_id(submenu['id']) is not None
+    response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/")
+    assert response.status_code == 200
 
     # create dish1
     dish1 = {
@@ -492,7 +507,8 @@ def test_count_submenu_and_dish_of_menu():
     response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish1)
     assert response.status_code == 201
     assert response.json()['id'] == dish1['id']
-    assert get_dish_by_id(dish1['id']) is not None
+    response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/{dish1['id']}")
+    assert response.status_code == 200
 
     # create dish2
     dish2 = {
@@ -504,7 +520,8 @@ def test_count_submenu_and_dish_of_menu():
     response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish2)
     assert response.status_code == 201
     assert response.json()['id'] == dish2['id']
-    assert get_dish_by_id(dish2['id']) is not None
+    response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/{dish2['id']}")
+    assert response.status_code == 200
 
     # Views a specific menu
     response = client.get(f"/{menu['id']}/")
