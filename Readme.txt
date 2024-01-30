@@ -126,26 +126,25 @@
     После успешного выполнения команды к названию пути в терминале добавится префикс: (venv)
     Более подробно можно ознакомиться здесь: https://docs.python.org/3/library/venv.html
 
-    Далее устанавливаем необходимые библиотеки:
+   Далее устанавливаем необходимые библиотеки:
 
-        pip install -r .\restaurant\requirements.txt
+    pip install -r .\restaurant\requirements.txt
 
     Перед запуском приложения убедитесь, что каталог REST-API_restaurant имеет следующую структуру:
 
-        REST-API_restaurant:
-                \alembic
-                \restaurant
-                \venv
-                \.env
-                \.gitignore
-                \alembic.ini
-                \config.py
-                \main.py
-                \Readme.txt
-                \requirements.txt
+    REST-API_restaurant:
+            \alembic
+            \restaurant
+            \venv
+            \.env
+            \.gitignore
+            \alembic.ini
+            \docker-compose.yml
+            \docker-compose-tests.yml
+            \Readme.txt               
 
-    Для запуска приложения можно воспользоваться командой:
-
+    Для запуска приложения перейдите в каталог restaurant и воспользуйтесь командой:
+    
         uvicorn main:app --reload
 
     Либо
