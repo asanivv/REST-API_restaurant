@@ -7,10 +7,10 @@ from fastapi.testclient import TestClient
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 
-from restaurant.menu import models
-from restaurant.menu.crud import is_valid_uuid
-from restaurant.menu.database import engine
-from restaurant.menu.routers import menu_router
+from menu import models
+from menu.crud import is_valid_uuid
+from menu.database import engine
+from menu.routers import menu_router
 
 client = TestClient(menu_router)
 
