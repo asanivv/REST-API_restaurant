@@ -128,7 +128,7 @@
 
     Далее устанавливаем необходимые библиотеки:
 
-        pip install -r requirements.txt
+        pip install -r .\restaurant\requirements.txt
 
     Перед запуском приложения убедитесь, что каталог REST-API_restaurant имеет следующую структуру:
 
