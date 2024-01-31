@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import delete
+from sqlalchemy import delete, func
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
@@ -20,11 +20,10 @@ class TestMenus:
         with Session(engine) as session:
             session.execute(delete(models.Menu))
             session.commit()
+            assert session.query(models.Menu).all() == []
         response = client.get("/")
         assert response.status_code == 200
         assert response.json() == []
-        with Session(engine) as session:
-            assert session.query(models.Menu).all() == []
 
     def test_create_menu(self):
         # create menu
@@ -205,3 +204,128 @@ class TestMenus:
         # delete menu
         response = client.delete(f"/{self.menu['id']}/")
         assert response.status_code == 200
+
+    def test_count_submenu_and_dish_of_menu(self):
+        with Session(engine) as session:
+            session.execute(delete(models.Menu))
+            session.commit()
+
+        # create menu
+        menu = {
+            "id": f"{uuid.uuid4()}",
+            "title": "menu1",
+            "description": "about menu1",
+        }
+        response = client.post("/", json=menu)
+        assert response.status_code == 201
+        assert response.json()['id'] == menu['id']
+        response = client.get(f"/{menu['id']}")
+        assert response.status_code == 200
+        with Session(engine) as session:
+            assert session.get(models.Menu, menu['id']) is not None
+
+        # create submenu
+        submenu = {
+            "id": f"{uuid.uuid4()}",
+            "title": "submenu1",
+            "description": "about submenu1",
+        }
+        response = client.post(f"/{menu['id']}/submenus/", json=submenu)
+        assert response.status_code == 201
+        assert response.json()['id'] == submenu['id']
+        response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/")
+        assert response.status_code == 200
+        with Session(engine) as session:
+            assert session.get(models.SubMenu, submenu['id']) is not None
+
+        # create dish1
+        dish1 = {
+            "id": f"{uuid.uuid4()}",
+            "title": "dish1",
+            "description": "about dish1",
+            "price": "13.50"
+        }
+        response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish1)
+        assert response.status_code == 201
+        assert response.json()['id'] == dish1['id']
+        response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/{dish1['id']}")
+        assert response.status_code == 200
+        with Session(engine) as session:
+            assert session.get(models.Dish, dish1['id']) is not None
+
+        # create dish2
+        dish2 = {
+            "id": f"{uuid.uuid4()}",
+            "title": "dish2",
+            "description": "about dish2",
+            "price": "12.50"
+        }
+        response = client.post(f"/{menu['id']}/submenus/{submenu['id']}/dishes/", json=dish2)
+        assert response.status_code == 201
+        assert response.json()['id'] == dish2['id']
+        response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/{dish2['id']}")
+        assert response.status_code == 200
+        with Session(engine) as session:
+            assert session.get(models.Dish, dish2['id']) is not None
+
+        # Views a specific menu
+        response = client.get(f"/{menu['id']}/")
+        assert response.status_code == 200
+        assert response.json()['id'] == menu['id']
+        assert response.json()['submenus_count'] == 1
+        assert response.json()['dishes_count'] == 2
+
+        # Views a specific submenu
+        response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/")
+        assert response.status_code == 200
+        assert response.json()['id'] == submenu['id']
+        assert response.json()['dishes_count'] == 2
+
+        with Session(engine) as session:
+            assert session.query(func.count(models.SubMenu.id)).filter(
+                models.SubMenu.menu_id == menu['id']).first()[0] == 1
+            assert session.query(func.count(models.Dish.id)).filter(
+                models.Dish.submenu_id == submenu['id']).first()[0] == 2
+
+        # Delete submenu
+        response = client.delete(f"/{menu['id']}/submenus/{submenu['id']}/")
+        assert response.status_code == 200
+
+        # Views a list of submenus
+        response = client.get(f"/{menu['id']}/submenus/")
+        assert response.status_code == 200
+        assert response.json() == []
+
+        # Views a list of dishes
+        response = client.get(f"/{menu['id']}/submenus/{submenu['id']}/dishes/")
+        assert response.status_code == 200
+        assert response.json() == []
+
+        with Session(engine) as session:
+            assert session.query(models.SubMenu).all() == []
+            assert session.query(models.Dish).all() == []
+
+        # Views a specific menu
+        response = client.get(f"/{menu['id']}/")
+        assert response.status_code == 200
+        assert response.json()['id'] == menu['id']
+        assert response.json()['submenus_count'] == 0
+        assert response.json()['dishes_count'] == 0
+
+        with Session(engine) as session:
+            assert session.get(models.Menu, menu['id']) is not None
+            assert session.query(func.count(models.SubMenu.id)).filter(
+                models.SubMenu.menu_id == menu['id']).first()[0] == 0
+            assert session.query(func.count(models.Dish.id)).filter(
+                models.Dish.submenu_id == submenu['id']).first()[0] == 0
+
+        # Delete menu
+        response = client.delete(f"/{menu['id']}")
+        assert response.status_code == 200
+
+        # Views a list of menus
+        response = client.get("/")
+        assert response.status_code == 200
+        assert response.json() == []
+        with Session(engine) as session:
+            assert session.get(models.Menu, menu['id']) is None

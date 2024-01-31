@@ -22,22 +22,26 @@ class TestSubMenus:
     }
 
     def test_read_empty_submenu(self):
-        with Session(engine) as session:
-            session.execute(delete(models.SubMenu))
-            session.commit()
         # create menu
         response = client.post(
             "/",
             json=self.menu,
         )
         assert response.status_code == 201
-        assert response.json()['id'] == self.menu['id']
+        with Session(engine) as session:
+            session.execute(delete(models.SubMenu))
+            session.commit()
+            assert session.get(models.Menu, self.menu['id']) is not None
+            assert session.query(models.SubMenu).all() == []
         response = client.get(f"/{self.menu['id']}/submenus/")
         assert response.status_code == 200
         assert response.json() == []
         # delete menu
         response = client.delete(f"/{self.menu['id']}/")
         assert response.status_code == 200
+        with Session(engine) as session:
+            assert session.get(models.Menu, self.menu['id']) is None
+
 
     def test_create_submenu(self):
         # create menu
@@ -273,14 +277,40 @@ class TestSubMenus:
             assert session.get(models.Menu, self.menu['id']) is None
 
     def test_update_submenu(self):
-        response = client.patch(f"/{menu_test['id']}/submenus/{submenu_test['id']}/",
+        # create menu
+        response = client.post(
+            "/",
+            json=self.menu,
+        )
+        assert response.status_code == 201
+        # create submenu
+        response = client.post(
+            f"/{self.menu['id']}/submenus/",
+            json=self.submenu,
+        )
+        assert response.status_code == 201
+        # update submenu
+        new_description = 'this field has been changed'
+        response = client.patch(f"/{self.menu['id']}/submenus/{self.submenu['id']}/",
                                 json={
 
-                                    "id": submenu_test['id'],
-                                    "title": submenu_test['title'],
-                                    "description": "this field has been changed",
+                                    "id": f"{self.submenu['id']}",
+                                    "title": self.submenu['title'],
+                                    "description": f"{new_description}",
                                 },
                                 )
         assert response.status_code == 200
         data = response.json()
-        assert data['description'] == "this field has been changed"
+        assert data['description'] == new_description
+        assert data['id'] == self.submenu['id']
+        assert data['title'] == self.submenu['title']
+        with Session(engine) as session:
+            db_submenu = session.get(models.SubMenu, self.submenu['id'])
+            assert f'{db_submenu.menu_id}' == self.menu['id']
+            assert db_submenu.title == self.submenu['title']
+            assert db_submenu.description == new_description
+            session.execute(delete(models.Menu).filter(models.Menu.id == self.menu['id']))
+            session.commit()
+            assert session.get(models.Menu, self.menu['id']) is None
+            assert session.get(models.SubMenu, self.submenu['id']) is None
+
