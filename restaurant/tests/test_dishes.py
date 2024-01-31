@@ -5,9 +5,9 @@ from sqlalchemy import delete
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
-from restaurant.menu import models
-from restaurant.menu.crud import is_valid_uuid
-from restaurant.tests.Dependency import engine, client
+from menu import models
+from menu.crud import is_valid_uuid
+from tests.Dependency import engine, client
 
 
 class TestDishes:

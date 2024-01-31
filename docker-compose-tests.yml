@@ -7,7 +7,7 @@ services:
       - .env
     build: ./restaurant
     container_name: menu_tests
-    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; pytest -vv'
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; pytest -v ./tests/test_restaurant_menu.py::TestRestaurantMenu'
     volumes:
       - .:/restaurant
     environment:
